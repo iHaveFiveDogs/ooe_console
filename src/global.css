@@ -1,0 +1,283 @@
+html,
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    overflow-x: hidden;
+    background: #ffffff;
+    color: #111827;
+}
+
+/* App container: topbar + left sidebar + main content (fixed widths) */
+.app-container {
+    height: 100vh;
+    display: grid;
+    grid-template-rows: 56px 1fr;
+    /* topbar + content */
+    grid-template-columns: 260px 1fr;
+    /* left sidebar + main content */
+    overflow: hidden;
+    background: #ffffff;
+    color: #111827;
+}
+
+/* Main content area */
+.content {
+    margin-left: 0;
+    /* match narrow sidebar width when using flex layout */
+    flex: 1;
+    padding: 32px;
+    background: var(--sidebar-bg, #ffffff);
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+/* ensure horizontal overflow hidden at root */
+html,
+body,
+.app-container,
+.content {
+    overflow-x: hidden;
+}
+
+/* override some components to fit dark theme */
+.app .system-prompt-container {
+    background: #0f0f0f;
+    border: 1px solid #222;
+    color: #ddd;
+}
+
+/* Grid layout for conversation panel (scoped) */
+.app .conversation-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 16px;
+    align-items: start;
+}
+
+.app .system-column {
+    min-height: 100px
+}
+
+.app .chat-column {
+    min-height: 100px
+}
+
+/* make chat window sit above input and be visually integrated */
+.app .chat-window {
+    background: white;
+    border-radius: 8px;
+}
+
+.app .npc-msg {
+    background: #f3f4f6;
+    padding: 8px 10px;
+    border-radius: 6px;
+}
+
+.app .user-msg {
+    background: #eef2ff;
+    padding: 8px 10px;
+    border-radius: 6px;
+    align-self: flex-end;
+}
+
+/* SceneList card grid (1-3 columns responsive) */
+.scene-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 16px;
+}
+
+@media (min-width: 768px) {
+    .scene-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .scene-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.scene-card {
+    border: 1px solid #e6e6e6;
+    background: #fff;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: box-shadow .15s ease, transform .12s ease;
+}
+
+.scene-card:hover {
+    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
+    transform: translateY(-3px);
+}
+
+.scene-card h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.scene-card p {
+    color: #444;
+    margin-top: 8px;
+    font-size: 13px;
+    overflow: hidden;
+    display: -webkit-box;
+    line-clamp: 3;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+/* action area spacing inside scene-card */
+.scene-card .actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+}
+
+/* Conversation page layout (left: scene info, right: chat) */
+.conversation {
+    padding: 12px;
+}
+
+/* Make left column a fixed comfortable width and allow right column to grow; ensure small screens stack */
+.conversation .conversation-grid,
+.conversation-grid {
+    display: grid;
+    /* make left and right columns equal width for better balance */
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: stretch;
+    /* make both columns match height */
+}
+
+@media (max-width: 1000px) {
+
+    .conversation .conversation-grid,
+    .conversation-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Left panel: give it padding, subtle background and make it sticky so it stays visible while scrolling the chat */
+.conversation .system-column,
+.system-column {
+    padding: 16px;
+    background: #fbfdff;
+    border: 1px solid #eef2f6;
+    border-radius: 10px;
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+    align-self: stretch;
+    max-width: 720px;
+    width: 100%;
+}
+
+/* Right panel: ensure it can shrink safely on smaller viewports */
+.conversation .chat-column,
+.chat-column {
+    min-width: 0;
+    /* allow flex/grid children to shrink properly */
+}
+
+/* Chat window: balance height relative to viewport and header area so layout feels balanced */
+.conversation .chat-window {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    height: calc(100vh - 120px);
+    overflow: auto;
+}
+
+/* ensure message bubbles look consistent in this layout */
+.conversation .npc-msg {
+    background: #f3f4f6;
+    padding: 8px 10px;
+    border-radius: 6px;
+    max-width: 80%;
+}
+
+.conversation .user-msg {
+    background: #eef2ff;
+    padding: 8px 10px;
+    border-radius: 6px;
+    align-self: flex-end;
+    max-width: 80%;
+}
+
+/* Chat panel layout inside right column */
+.chat-panel {
+    display: flex;
+    flex-direction: column;
+    /* match left panel height so bottoms align */
+    height: calc(100vh - 120px);
+}
+
+.chat-panel .chat-window {
+    flex: 1 1 auto;
+    padding: 12px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #e6e6e6;
+    overflow: auto;
+    /* ensure chat window doesn't push input down beyond left panel */
+    min-height: 0;
+}
+
+.chat-input-area {
+    margin-top: 12px;
+    padding: 8px 0 0 0;
+    border-top: 1px solid #f1f1f1;
+    background: #ffffff;
+    /* fixed input area height so send button aligns with left panel bottom */
+    height: 88px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.chat-input-area .ant-input {
+    border-radius: 8px;
+}
+
+.chat-input-area .ant-btn {
+    min-width: 96px;
+}
+
+/* main-area flex wrapper (ensure sidebar participates in layout, not fixed) */
+.main-area {
+    grid-column: 1 / 3;
+    grid-row: 1 / 3;
+    /* start at the top so sidebar border reaches the viewport top */
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    /* allow children to scroll */
+}
+
+/* Remove global white sidebar override so component dark sidebar CSS applies */
+.app-sidebar {
+    flex-shrink: 0;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+/* remove any leftover fixed sidebar settings and hover-expansion rules by overriding */
+.app-sidebar[style],
+.app-sidebar.fixed {
+    position: static !important;
+    top: auto !important;
+}
+
+/* when sidebar is expanded or pinned, push content - kept for compatibility but lower priority than flex layout */
+body.sidebar-expanded .content,
+.app-sidebar.pinned~.content {
+    margin-left: 0 !important;
+}

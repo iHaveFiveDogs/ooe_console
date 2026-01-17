@@ -1,0 +1,91 @@
+.container {
+    padding: 12px;
+}
+
+.formInline {
+    margin-bottom: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.formVertical {
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.select320 {
+    width: 320px;
+}
+
+.select420 {
+    width: 420px;
+}
+
+.select300 {
+    width: 300px;
+}
+
+.fullWidth {
+    width: 100%;
+}
+
+.grid {
+    display: grid;
+    gap: 12px;
+}
+
+.previewGrid {
+    display: grid;
+    gap: 12px;
+}
+
+.rowTwo {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    /* world expands, role_pair fixed */
+    gap: 12px;
+    align-items: center;
+}
+
+.alertMb {
+    margin-bottom: 12px;
+}
+
+.alertTop {
+    margin-top: 12px;
+}
+
+.tableWrapper {
+    margin-top: 12px;
+}
+
+.previewWrapper {
+    margin-top: 12px;
+}
+
+.tableHeading {
+    margin-bottom: 8px;
+}
+
+.listSection {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+}
+
+.listSection h4 {
+    margin: 0 0 8px 0;
+}
+
+.listItem {
+    font-size: 13px;
+    color: #111827;
+    padding: 4px 0;
+    border-bottom: 1px dashed #f3f4f6;
+}

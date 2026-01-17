@@ -1,0 +1,160 @@
+.conversation {
+    padding: 12px;
+}
+
+.conversationGrid {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 12px;
+    align-items: stretch;
+    /* fix both columns to the same explicit height */
+    height: 800px;
+    /* prevent automatic stretching beyond fixed height */
+}
+
+.systemColumn {
+    display: block;
+}
+
+.systemGrid {
+    display: flex;
+    /* stack left panel content vertically and let it define column height */
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    /* allow proper flexing inside grid */
+    flex: 1;
+    /* grow to match the grid height so the left column fills available space */
+    /* make left panel fill the fixed grid height */
+    height: 100%;
+}
+
+.label {
+    font-weight: 700;
+}
+
+.text {
+    color: #374151;
+}
+
+.systemPromptContainer {
+    display: block;
+}
+
+.systemPrompt {
+    color: #374151;
+}
+
+.turnSummary {
+    border: 1px solid #eef2f6;
+    padding: 10px;
+    border-radius: 8px;
+    background: #fbfdff;
+}
+
+.hintBox {
+    background: #f8fafc;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    white-space: pre-wrap;
+    margin-bottom: 6px;
+}
+
+.feedbackBox {
+    background: #fff7ed;
+    padding: 8px;
+    border-radius: 6px;
+    color: #92400e;
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+
+.examplesList {
+    margin-top: 6px;
+}
+
+.chatColumn {
+    display: block;
+}
+
+.chatPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* Fix total chat area height to 800px as requested */
+    height: 800px;
+    flex: none;
+    min-height: 0;
+}
+
+.chatWindow {
+    border: 1px solid #ddd;
+    padding: 8px;
+    overflow: auto;
+    margin-top: 0;
+    /* take remaining space above input area (800 total minus input area height) */
+    height: calc(800px - 150px);
+    flex: none;
+    min-height: 0;
+}
+
+.chatInputArea {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 150px;
+    /* fixed input area height as requested */
+}
+
+.chatInputArea .ant-input,
+.chatInputArea textarea {
+    /* let the textarea expand to fill the input area above the send button */
+    flex: 1 1 auto !important;
+    height: auto !important;
+}
+
+.sendButtonWrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0;
+    /* no extra gap because input area already reserves space */
+}
+
+.npcMsg {
+    margin-bottom: 8px;
+    padding: 8px;
+    background: #f1f8ff;
+    border-radius: 6px;
+}
+
+.userMsg {
+    margin-bottom: 8px;
+    padding: 8px;
+    background: #f7f7f8;
+    border-radius: 6px;
+}
+
+/* left panel intro box - keep default spacing */
+.intro {
+    padding: 6px 0;
+}
+
+.section {
+    padding: 0;
+}
+
+/* Added for turn summary inline style removal */
+.smallMuted {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.mb6 {
+    margin-bottom: 6px;
+}
+
+.stageLine {
+    margin-bottom: 6px;
+    color: #374151;
+}

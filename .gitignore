@@ -1,0 +1,41 @@
+# Node / build
+node_modules/
+dist/
+build/
+.vite/
+.env
+.env.*
+.DS_Store
+coverage/
+/.idea/
+.vscode/
+*.log
+
+# Editor temp
+*.tmp
+*.bak
+*.swp
+
+# OS files
+Thumbs.db
+
+# Ignore compiled outputs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Project-specific: do not back up the legacy/backup pages that were migrated to SceneExpansion
+/src/pages/SceneTemplatesPage.tsx
+/src/pages/ConflictTemplatesPage.tsx
+/src/pages/TopicTemplatesPage.tsx
+/src/pages/ConflictList.tsx
+
+# Local one-off backup copies (if created during migration)
+/src/pages/**/*.bak
+/src/pages/legacy/
+
+# Optional: ignore generated session data and local test outputs
+/tmp/
+/local_session.json
+
+# End of .gitignore

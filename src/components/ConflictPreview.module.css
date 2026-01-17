@@ -1,0 +1,61 @@
+.container {
+    border: 1px solid #e5e7eb;
+    padding: 10px;
+    border-radius: 6px;
+    background: #fff;
+    margin-top: 8px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.title {
+    font-weight: 600;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+}
+
+.button {
+    background: transparent;
+    border: 1px solid #d1d5db;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.button:hover {
+    background: #f3f4f6;
+}
+
+.loading {
+    margin-top: 8px;
+}
+
+.error {
+    margin-top: 8px;
+    color: red;
+}
+
+.content {
+    margin-top: 8px;
+}
+
+.short {
+    margin-top: 8px;
+    color: #555;
+}
+
+.noPreview {
+    margin-top: 8px;
+    color: #666;
+}
+
+.expanded {
+    margin-top: 8px;
+}

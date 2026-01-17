@@ -1,0 +1,255 @@
+/* Sidebar participates in flow (flex) so main content appears on the right */
+:root {
+    --sidebar-narrow: 56px;
+    --sidebar-wide: 240px;
+    --sidebar-bg: #ffffff;
+    --sidebar-fg: #0f172a;
+    --accent: #0769d6;
+}
+
+.app-sidebar {
+    /* fixed precise width for collapsed state */
+    width: var(--sidebar-narrow) !important;
+    min-width: var(--sidebar-narrow) !important;
+    max-width: var(--sidebar-narrow) !important;
+
+    flex: 0 0 var(--sidebar-narrow);
+    /* make sidebar fixed so its right border spans the full viewport height */
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    background: var(--sidebar-bg);
+    color: var(--sidebar-fg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 8px;
+    box-sizing: border-box;
+    z-index: 30;
+    /* unified transition for width */
+    transition: width 0.25s ease-in-out, border-color .18s ease;
+    will-change: width;
+    border-right: 1px solid rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+}
+
+/* expanded (pinned) state exact width */
+.app-sidebar.pinned {
+    width: var(--sidebar-wide) !important;
+    min-width: var(--sidebar-wide) !important;
+    max-width: var(--sidebar-wide) !important;
+    flex: 0 0 var(--sidebar-wide);
+}
+
+/* body-level expansion mirror */
+body.sidebar-expanded .app-sidebar {
+    width: var(--sidebar-wide) !important;
+    min-width: var(--sidebar-wide) !important;
+    max-width: var(--sidebar-wide) !important;
+    flex: 0 0 var(--sidebar-wide);
+}
+
+/* ensure nav content grows and sits above the pin control */
+.app-sidebar nav {
+    width: 100%;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 6px;
+    overflow: hidden
+}
+
+.pin-area {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+    box-sizing: border-box;
+    position: absolute;
+    /* keep pin at bottom of sidebar */
+    bottom: 12px;
+    left: 0;
+}
+
+/* allow inner content to scroll when sidebar exceeds viewport */
+.app-sidebar nav {
+    overflow-y: auto;
+}
+
+.pin-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    color: var(--sidebar-fg);
+    outline: none;
+}
+
+.pin-icon {
+    transition: transform .18s ease
+}
+
+.app-sidebar:not(.pinned) .pin-icon {
+    transform: rotate(0deg)
+}
+
+.app-sidebar.pinned .pin-icon {
+    transform: rotate(180deg)
+}
+
+.nav-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    color: var(--sidebar-fg);
+    text-decoration: none;
+    box-sizing: border-box;
+    overflow: hidden;
+    /* prevent children overflow */
+}
+
+.nav-icon {
+    display: inline-flex;
+    width: 36px;
+    justify-content: center;
+    align-items: center;
+    flex: 0 0 36px
+}
+
+/* Hide labels in collapsed mode; show only when expanded */
+.nav-label {
+    display: none;
+    opacity: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.app-sidebar.pinned .nav-label,
+body.sidebar-expanded .nav-label {
+    display: inline-block;
+    /* show when expanded */
+    opacity: 1;
+}
+
+.nav-item.active {
+    background: rgba(7, 103, 214, 0.06);
+    border-left: 3px solid var(--accent);
+    padding-left: 9px;
+    /* compensate for left border */
+}
+
+/* Ensure the main content is next to the sidebar via flex layout and synced widths */
+.content {
+    margin-left: var(--sidebar-narrow) !important;
+    /* match collapsed width by default */
+    transition: margin-left 0.25s ease-in-out;
+    will-change: margin-left;
+    flex: 1 1 auto;
+    padding: 32px;
+    background: #ffffff;
+    /* changed to pure white per user request */
+    box-sizing: border-box;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    /* spacing between modules */
+    align-items: center;
+    /* center content-inner horizontally */
+}
+
+body.sidebar-expanded .content {
+    margin-left: var(--sidebar-wide) !important;
+    /* match expanded width */
+}
+
+/* Inner constrained content area */
+.content-inner {
+    width: 959px;
+    /* fixed width per request */
+    max-width: 959px;
+    margin: 50px auto 0;
+    /* top margin 50px and center horizontally */
+    box-sizing: border-box;
+}
+
+@media (max-width: 1000px) {
+    .content-inner {
+        width: 92%;
+        max-width: 92%;
+        margin-top: 24px;
+        padding: 0 12px;
+    }
+}
+
+/* Module wrapper used by pages to group controls */
+.module-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 720px;
+    /* allow larger form width but limit to avoid stretching */
+}
+
+/* Horizontal row for select + buttons */
+.select-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    /* wrap on small screens */
+    width: 100%;
+}
+
+.select-row select {
+    flex: 1 1 auto;
+    min-width: 200px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #e6e6e6;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.select-row button {
+    flex: 0 0 auto;
+    /* button doesn't shrink */
+}
+
+/* Ensure labels stack nicely */
+.module-wrapper label {
+    display: block;
+}
+
+/* Small responsive: collapse sidebar as overlay on small screens */
+@media (max-width:720px) {
+    .app-sidebar {
+        /* keep overlay behavior on small screens */
+        left: 0;
+        top: 48px;
+        bottom: 0;
+        transform: translateX(-100%);
+        transition: transform .18s ease;
+        position: fixed;
+        height: calc(100vh - 48px);
+    }
+
+    body.sidebar-expanded .app-sidebar {
+        transform: translateX(0)
+    }
+
+    .content {
+        margin-left: 0 !important;
+        padding: 16px
+    }
+}
