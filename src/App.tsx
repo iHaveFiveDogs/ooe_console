@@ -91,8 +91,8 @@ export default function App(): JSX.Element {
                             />
                             <StartableSceneListWrapper />
                         </div>} />
-                        {/* scene under scene builder (scene list for builders) */}
-                        <Route path="scene" element={<StartableSceneListWrapper />} />
+                        {/* legacy scene route removed: redirect to expansion */}
+                        <Route path="scene" element={<Navigate to="/scene/expansion" replace />} />
                         <Route path="world" element={<WorldList />} />
                         <Route path="conflict" element={<Navigate to="/scene/expansion" replace />} />
                         <Route path="expansion" element={<SceneExpansionPage />} />

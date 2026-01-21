@@ -20,7 +20,7 @@ import { notification } from 'antd'
 import { listRolePairs } from '../api/rolePairs'
 import { listWorldRolePairRulesForWorld } from '../api/worldRolePairRules'
 import { listWorldArchetypeRulesForWorld } from '../api/worldArchetypeRules'
-import { listConflictArchetypes } from '../api/conflictArchetypes'
+import { listConflictArchetypes, listEnabledConflictArchetypes } from '../api/conflictArchetypes'
 import { listConflictEscalationSkeletons } from '../api/conflictEscalationSkeletons'
 import { post } from '../api/http'
 import styles from './SceneExpansion.module.css'
@@ -71,23 +71,22 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
     useEffect(() => {
         let mounted = true
         setResourcesLoading(true)
-        // Wrap listTopics with a safe fallback so a topics failure doesn't reject the whole Promise.all
+        // Wrap resource loads in Promise.all; do not call listTopicsForWorld('') with an empty world key.
         Promise.all([
             listWorlds(),
             listScenes(),
             listConflicts(),
-            listRolePairs(),
-            // ensure topics always resolves to an array
-            listTopicsForWorld('').catch(() => [])
+            listRolePairs()
         ])
-            .then(([w, s, c, rp, t]) => {
+            .then(([w, s, c, rp]) => {
                 if (!mounted) return
                 setWorlds(w)
                 // store raw lists; do not populate selectors until world selected
                 setRawScenes(s)
                 setRawConflicts(c)
                 setRolePairs(rp || [])
-                setRawTopics(t || [])
+                // do not preload topics without a selected world; keep cache empty
+                setRawTopics([])
             })
             .catch(() => {
                 // ignore errors for resources, keep arrays empty
@@ -371,8 +370,9 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
     // Preload generator lists (archetypes, skeletons) so modal opens quickly
     async function loadGenerators() {
         try {
+            // use enabled archetypes endpoint for the top dropdown
             const [a, s] = await Promise.all([
-                listConflictArchetypes(),
+                listEnabledConflictArchetypes(),
                 listConflictEscalationSkeletons(),
             ])
             setArchetypes(a || [])
@@ -416,7 +416,12 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
 
                     <Form.Item name="conflict" label="Conflict" rules={[{ required: true, message: 'Select a conflict' }]}>
                         <Select disabled={!selectedWorld} showSearch className={styles.fullWidth} placeholder="Select conflict" value={selectedConflict} onChange={(v) => setSelectedConflict(v)} filterOption={(input, option) => String(option?.label ?? '').toLowerCase().includes(String(input).toLowerCase())}>
-                            {displayedConflicts.map(c => (<Select.Option key={c.key} value={c.key} label={c.key}>{c.key}</Select.Option>))}
+                            {/* Use displayedConflicts (actual conflict templates) so value is conflict.key */}
+                            {displayedConflicts.map((c: any) => (
+                                <Select.Option key={c.key} value={c.key} label={c.key}>
+                                    {c.key}{c.short_desc ? ` — ${c.short_desc}` : (c.category ? ` — ${c.category}` : '')}
+                                </Select.Option>
+                            ))}
                         </Select>
                     </Form.Item>
 
@@ -475,9 +480,6 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
                     {/* Full management UIs (migrated from their original pages) */}
                     <div className={styles.listSection}>
                         <h3>Manage Scenes</h3>
-                        <div style={{ marginBottom: 12 }}>
-                            <WorldSelector value={selectedWorld} onChange={(k) => setSelectedWorld(k)} />
-                        </div>
                         <SceneList worldKey={selectedWorld} />
                     </div>
 

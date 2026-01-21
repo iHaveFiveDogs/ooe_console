@@ -201,6 +201,11 @@ body.sidebar-expanded .content {
     /* allow larger form width but limit to avoid stretching */
 }
 
+/* allow pages to opt-in to full-width module content */
+.module-wrapper.full-width {
+    max-width: 100%;
+}
+
 /* Horizontal row for select + buttons */
 .select-row {
     display: flex;

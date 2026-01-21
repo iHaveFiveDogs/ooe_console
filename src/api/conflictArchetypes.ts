@@ -27,3 +27,7 @@ export async function updateConflictArchetype(key: string, payload: ConflictArch
 export async function deleteConflictArchetype(key: string): Promise<void> {
     return del(`/services/conflict_archetypes/${encodeURIComponent(key)}`)
 }
+
+export async function listEnabledConflictArchetypes(): Promise<ConflictArchetype[]> {
+    return get('/services/conflict_archetypes/enabled')
+}

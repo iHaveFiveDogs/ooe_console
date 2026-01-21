@@ -5,6 +5,7 @@ import { listScenesByWorld, deleteScene } from '../api/scenes'
 import { getWorld } from '../api/worlds'
 import SceneForm from './SceneForm'
 import { Modal, Button, Popconfirm, Spin, Alert, notification, Space, List } from 'antd'
+import StyledTable from '../components/StyledTable'
 import WorldSelector from './WorldSelector'
 import { useNavigate } from 'react-router-dom'
 
@@ -96,9 +97,15 @@ export default function SceneList({ worldKey, onStart }: Props): JSX.Element {
     }
 
     return (
-        <div className="module-wrapper">
+        <div className="module-wrapper full-width">
             <div className="select-row" style={{ width: '100%', marginBottom: 12 }}>
-                <WorldSelector value={effectiveWorldKey} onChange={(k) => setLocalWorldKey(k)} />
+                {worldKey === undefined ? (
+                    <WorldSelector value={effectiveWorldKey} onChange={(k) => setLocalWorldKey(k)} />
+                ) : (
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <strong style={{ marginRight: 12 }}>{effectiveWorldKey ? `World: ${effectiveWorldKey}` : ''}</strong>
+                    </div>
+                )}
                 <Button onClick={() => navigate('/scene/world')}>Create / Manage Worlds</Button>
             </div>
             {error && <Alert type="error" message={error} style={{ marginBottom: 12 }} />}
@@ -148,35 +155,67 @@ export default function SceneList({ worldKey, onStart }: Props): JSX.Element {
             </div>
 
             <Spin spinning={loading}>
-                {/* List view with pagination: 5 records per page */}
-                <List
-                    itemLayout="vertical"
-                    dataSource={items}
-                    pagination={{ pageSize: 5 }}
-                    renderItem={(scene) => (
-                        <List.Item
-                            key={scene.key}
-                            actions={[
-                                <div key={`actions-${scene.key}`}>
-                                    <Button size="small" onClick={() => setEditing(scene.key)}>Edit</Button>
-                                    <Popconfirm key={`pop-${scene.key}`} title="Delete this scene?" onConfirm={() => handleDeleteScene(scene.key)}>
-                                        <Button danger size="small" style={{ marginLeft: 8 }}>Delete</Button>
-                                    </Popconfirm>
-                                </div>,
-                                (scene as any).script_mongo_id ? (
-                                    <Button key={`start-${scene.key}`} type="primary" size="small" onClick={() => handleStart(scene)}>Start</Button>
-                                ) : (
-                                    <Button key={`start-disabled-${scene.key}`} size="small" disabled>Start (missing script_mongo_id)</Button>
+                {effectiveWorldKey ? (
+                    // Render table format when embedded (matches conflict/topic style)
+                    <StyledTable
+                        rowKey="key"
+                        dataSource={items}
+                        columns={[
+                            { title: 'Title/Name', dataIndex: 'title', key: 'title', width: 100, render: (_: any, rec: SceneSummary) => (rec.title || (rec as any).name || '-') },
+                            // Short Description intentionally left without a width so it receives remaining horizontal space
+                            {
+                                title: 'Short Description', dataIndex: 'short_description', key: 'short_description', render: (_: any, rec: SceneSummary) => (
+                                    <div style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>{rec.short_description ?? '-'}</div>
                                 )
-                            ]}
-                        >
-                            <List.Item.Meta
-                                title={<h3 style={{ margin: 0 }}>{scene.title}</h3>}
-                                description={<p style={{ marginTop: 8, color: '#444' }}>{scene.short_description ?? ''}</p>}
-                            />
-                        </List.Item>
-                    )}
-                />
+                            },
+                            { title: 'Difficulty', dataIndex: 'difficulty', key: 'difficulty', width: 100 },
+                            {
+                                title: 'Actions', key: 'actions', width: 100, render: (_: any, rec: SceneSummary) => (
+                                    <Space>
+                                        <Button size="small" onClick={() => setEditing(rec.key || (rec as any).id)}>Edit</Button>
+                                        <Popconfirm title="Delete this scene?" onConfirm={() => handleDeleteScene(rec.key || (rec as any).id)}>
+                                            <Button danger size="small">Delete</Button>
+                                        </Popconfirm>
+                                        {(rec as any).script_mongo_id ? (
+                                            <Button type="primary" size="small" onClick={() => handleStart(rec)}>Start</Button>
+                                        ) : null}
+                                    </Space>
+                                )
+                            }
+                        ]}
+                        // ensure table stretches to container width
+                        style={{ width: '100%' }}
+                        pagination={{ pageSize: 5 }}
+                    />
+                ) : (
+                    // Keep legacy list view when not embedded
+                    <List
+                        itemLayout="vertical"
+                        dataSource={items}
+                        pagination={{ pageSize: 5 }}
+                        renderItem={(scene) => (
+                            <List.Item
+                                key={scene.key}
+                                actions={[
+                                    <div key={`actions-${scene.key}`}>
+                                        <Button size="small" onClick={() => setEditing(scene.key)}>Edit</Button>
+                                        <Popconfirm key={`pop-${scene.key}`} title="Delete this scene?" onConfirm={() => handleDeleteScene(scene.key)}>
+                                            <Button danger size="small" style={{ marginLeft: 8 }}>Delete</Button>
+                                        </Popconfirm>
+                                    </div>,
+                                    (scene as any).script_mongo_id ? (
+                                        <Button key={`start-${scene.key}`} type="primary" size="small" onClick={() => handleStart(scene)}>Start</Button>
+                                    ) : null
+                                ]}
+                            >
+                                <List.Item.Meta
+                                    title={<h3 style={{ margin: 0 }}>{scene.title}</h3>}
+                                    description={<p style={{ marginTop: 8, color: '#444' }}>{scene.short_description ?? ''}</p>}
+                                />
+                            </List.Item>
+                        )}
+                    />
+                )}
             </Spin>
 
             {/* Scene-Conflict Links panel removed from this page */}
