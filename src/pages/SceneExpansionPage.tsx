@@ -25,10 +25,23 @@ import { listConflictEscalationSkeletons } from '../api/conflictEscalationSkelet
 import { post } from '../api/http'
 import styles from './SceneExpansion.module.css'
 import tableStyles from '../components/Table.module.css'
-import ConflictTemplatesPage from './ConflictTemplatesPage'
-import TopicTemplatesPage from './TopicTemplatesPage'
 import SceneList from './SceneList'
 import WorldSelector from './WorldSelector'
+
+// Lightweight fallbacks when original pages were removed from disk (keeps SceneExpansionPage functional).
+const ConflictTemplatesPage: React.FC = () => (
+    <div style={{ padding: 12, border: '1px dashed #e5e7eb', borderRadius: 8, background: '#fff' }}>
+        <div style={{ fontWeight: 700, marginBottom: 6 }}>Conflict Templates (placeholder)</div>
+        <div style={{ color: '#6b7280' }}>Conflict management UI not available in this build. Restore `src/pages/ConflictTemplatesPage.tsx` to enable full functionality.</div>
+    </div>
+)
+
+const TopicTemplatesPage: React.FC<{ worldKey?: string }> = ({ worldKey }) => (
+    <div style={{ padding: 12, border: '1px dashed #e5e7eb', borderRadius: 8, background: '#fff' }}>
+        <div style={{ fontWeight: 700, marginBottom: 6 }}>Topic Templates (placeholder)</div>
+        <div style={{ color: '#6b7280' }}>{worldKey ? `No topic templates available for world ${worldKey}.` : 'No world selected.'}</div>
+    </div>
+)
 
 export default function SceneExpansionPage({ navigateToConversationFromScene }: { navigateToConversationFromScene?: (sceneKey: string, initialSession?: any) => void }): JSX.Element {
     const [loading, setLoading] = useState(false)

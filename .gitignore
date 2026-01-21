@@ -38,4 +38,10 @@ yarn-error.log*
 /tmp/
 /local_session.json
 
+# Ignore agent skill directories and files
+.agent
+.agents/**
+
+/.agents/
 # End of .gitignore
+
