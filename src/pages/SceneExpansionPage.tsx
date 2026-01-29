@@ -27,16 +27,19 @@ import styles from './SceneExpansion.module.css'
 import tableStyles from '../components/Table.module.css'
 import SceneList from './SceneList'
 import WorldSelector from './WorldSelector'
+import ConflictTemplatesPage from './ConflictTemplatesPage'
+import TopicTemplatesPage from './TopicTemplatesPage'
+import { debug as logDebug } from '../lib/log'
 
 // Lightweight fallbacks when original pages were removed from disk (keeps SceneExpansionPage functional).
-const ConflictTemplatesPage: React.FC = () => (
+const ConflictTemplatesPageFallback: React.FC = () => (
     <div style={{ padding: 12, border: '1px dashed #e5e7eb', borderRadius: 8, background: '#fff' }}>
         <div style={{ fontWeight: 700, marginBottom: 6 }}>Conflict Templates (placeholder)</div>
         <div style={{ color: '#6b7280' }}>Conflict management UI not available in this build. Restore `src/pages/ConflictTemplatesPage.tsx` to enable full functionality.</div>
     </div>
 )
 
-const TopicTemplatesPage: React.FC<{ worldKey?: string }> = ({ worldKey }) => (
+const TopicTemplatesPageFallback: React.FC<{ worldKey?: string }> = ({ worldKey }) => (
     <div style={{ padding: 12, border: '1px dashed #e5e7eb', borderRadius: 8, background: '#fff' }}>
         <div style={{ fontWeight: 700, marginBottom: 6 }}>Topic Templates (placeholder)</div>
         <div style={{ color: '#6b7280' }}>{worldKey ? `No topic templates available for world ${worldKey}.` : 'No world selected.'}</div>
@@ -94,6 +97,13 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
             .then(([w, s, c, rp]) => {
                 if (!mounted) return
                 setWorlds(w)
+                // default to 'home' world when available to avoid empty-world warnings
+                try {
+                    if (!selectedWorld) {
+                        const hasHome = (w || []).some((x: any) => x && x.key === 'home')
+                        if (hasHome) setSelectedWorld('home')
+                    }
+                } catch (e) { /* noop */ }
                 // store raw lists; do not populate selectors until world selected
                 setRawScenes(s)
                 setRawConflicts(c)
@@ -112,7 +122,14 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
     useEffect(() => {
         let mounted = true
         listWorlds()
-            .then(w => { if (!mounted) return; console.log('[SceneExpansionPage] fallback listWorlds:', w); setWorlds(w || []) })
+            .then(w => {
+                if (!mounted) return
+                console.debug('[SceneExpansion] fallback listWorlds:', w)
+                setWorlds(w || [])
+                try {
+                    if (!selectedWorld && (w || []).some((x: any) => x && x.key === 'home')) setSelectedWorld('home')
+                } catch (e) { /* noop */ }
+            })
             .catch(err => { console.warn('[SceneExpansionPage] fallback listWorlds failed', err) })
         return () => { mounted = false }
     }, [])
@@ -121,7 +138,7 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
     useEffect(() => {
         // Log scenes after they are loaded/updated
         try {
-            console.log('[SceneExpansion] scenes:', rawScenes)
+            logDebug('[SceneExpansion] scenes:', rawScenes)
         } catch (e) {
             /* noop */
         }
@@ -130,7 +147,7 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
     useEffect(() => {
         // Log when selected world changes
         try {
-            console.log('[SceneExpansion] selectedWorld:', selectedWorld)
+            logDebug('[SceneExpansion] selectedWorld:', selectedWorld)
         } catch (e) {
             /* noop */
         }
@@ -139,7 +156,7 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
     useEffect(() => {
         // Log displayed scenes after computation
         try {
-            console.log('[SceneExpansion] displayedScenes:', displayedScenes)
+            logDebug('[SceneExpansion] displayedScenes:', displayedScenes)
         } catch (e) {
             /* noop */
         }
@@ -152,8 +169,8 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
         setSelectedRolePair(undefined)
 
         // Minimal diagnostic logs for world->scene matching (no logic changes)
-        try { console.log('[SceneExpansion] worlds:', worlds) } catch (e) { /* noop */ }
-        try { console.log('[SceneExpansion] selectedWorld:', selectedWorld) } catch (e) { /* noop */ }
+        try { logDebug('[SceneExpansion] worlds:', worlds) } catch (e) { /* noop */ }
+        try { logDebug('[SceneExpansion] selectedWorld:', selectedWorld) } catch (e) { /* noop */ }
 
         // If no world selected => clear displayed lists and disable selectors
         if (!selectedWorld) {
@@ -166,8 +183,8 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
         const worldObj = worlds.find(w => (w as any).key === selectedWorld)
         const worldId = worldObj ? (worldObj as any).id : undefined
 
-        try { console.log('[SceneExpansion] worldObj:', worldObj, 'worldId:', worldId) } catch (e) { /* noop */ }
-        try { console.log('[SceneExpansion] rawScenesCount:', rawScenes.length, 'sampleScene:', rawScenes[0]) } catch (e) { /* noop */ }
+        try { logDebug('[SceneExpansion] worldObj:', worldObj, 'worldId:', worldId) } catch (e) { /* noop */ }
+        try { logDebug('[SceneExpansion] rawScenesCount:', rawScenes.length, 'sampleScene:', rawScenes[0]) } catch (e) { /* noop */ }
 
         // Scenes: match by the first segment of scene.key (world key) instead of numeric world_id.
         // Backend worlds may not include numeric id; do not rely on world_id for filtering.
@@ -177,9 +194,9 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
                 const sceneWorldKey = String(sceneKey).split('.')?.[0]
                 return sceneWorldKey === selectedWorld
             })
-            try { console.log('[SceneExpansion] computedScenesForWorld:', scenesForWorld) } catch (e) { /* noop */ }
+            try { logDebug('[SceneExpansion] computedScenesForWorld:', scenesForWorld) } catch (e) { /* noop */ }
             setDisplayedScenes(scenesForWorld)
-            try { console.log('[SceneExpansion] displayedScenes:', scenesForWorld) } catch (e) { /* noop */ }
+            try { logDebug('[SceneExpansion] displayedScenes:', scenesForWorld) } catch (e) { /* noop */ }
         } catch (e) {
             console.error('[SceneExpansionPage] failed to filter scenes by world key', e)
             setDisplayedScenes([])
@@ -194,7 +211,7 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
                     .filter((r: any) => r && (r.allowed === true || r.allowed === 'true'))
                     .map((r: any) => String(r.archetype_key))
 
-                console.debug('[SceneExpansionPage] archetype rules.length=', (rules || []).length, 'allowedArchetypes=', allowedArchetypes)
+                console.log('[SceneExpansionPage] archetype rules.length=', (rules || []).length, 'allowedArchetypes=', allowedArchetypes)
 
                 // 2) world role-pair rules (new)
                 let wpRules: any[] = []
@@ -256,7 +273,7 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
                     return isConflictAllowedInWorld(c, allowedRolePairIds, rolePairs)
                 })
 
-                console.debug('[SceneExpansionPage] rawConflicts=', rawConflicts.length, 'conflictsForWorld=', conflictsForWorld.length)
+                logDebug('[SceneExpansionPage] rawConflicts=', rawConflicts.length, 'conflictsForWorld=', conflictsForWorld.length)
 
                 setDisplayedConflicts(conflictsForWorld)
             } catch (err) {
@@ -281,7 +298,7 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
         const conflictKey = formValues?.conflict ?? selectedConflict
         const rolePairVal = formValues?.role_pair ?? selectedRolePair
 
-        console.log('[SceneExpansion] handleGenerate invoked', { formValues, world, sceneTemplate, conflictKey, rolePairVal })
+        logDebug('[SceneExpansion] handleGenerate invoked', { formValues, world, sceneTemplate, conflictKey, rolePairVal })
 
         setError(null)
         setResult(null)
@@ -308,10 +325,10 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
             const payload: any = { scene_key: sceneTemplate, conflict_key: conflictKey, world_key: world }
             // Only include numeric topic_id. If backend returns only string keys, do not send object/description.
             if (typeof selectedTopicId === 'number') payload.topic_id = selectedTopicId
-            console.log('[SceneExpansion] calling expandScene with payload:', payload)
+            logDebug('[SceneExpansion] calling expandScene with payload:', payload)
             const res = await expandScene(payload)
             const { scene_key, conflict_key, version } = res
-            console.log('Scene expansion result:', { scene_key, conflict_key, version })
+            logDebug('Scene expansion result:', { scene_key, conflict_key, version })
             setResult({ scene_key, conflict_key, version })
 
             // Immediately fetch expansion facts for the template scene_key
@@ -465,7 +482,7 @@ export default function SceneExpansionPage({ navigateToConversationFromScene }: 
 
                     <Form.Item>
                         <Space>
-                            <Button type="primary" htmlType="submit" loading={loading} onClick={() => console.log('[SceneExpansion] Generate button clicked')}>
+                            <Button type="primary" htmlType="submit" loading={loading} onClick={() => logDebug('[SceneExpansion] Generate button clicked')}>
                                 {loading ? 'Generating...' : 'Generate Scene'}
                             </Button>
                             {result && (

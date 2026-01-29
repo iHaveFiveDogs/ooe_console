@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { listContentScriptSummaries, listContentScriptAssets, createContentScript, updateContentScript, deleteContentScript } from '../api/contentScripts'
+import { listContentScriptSummaries, listContentScriptAssets, listUserContentScriptAssets, createContentScript, updateContentScript, deleteContentScript } from '../api/contentScripts'
 import { Button, Modal, Form, Input, InputNumber, notification, Space, Popconfirm, Card } from 'antd'
 import StyledTable from '../components/StyledTable'
 import ScriptAssetDetails from '../components/ScriptAssetDetails'
@@ -191,8 +191,16 @@ export default function ContentScriptsPage(): JSX.Element {
         if (scriptAssetsCache[script_key] && scriptAssetsCache[script_key].length > 0) return
         setLoading(true)
         try {
-            // try server-side filter via query param if supported
-            const res = await listContentScriptAssets({ script_key })
+            // try scene-scoped assets endpoint first
+            let res: any = await listContentScriptAssets({ script_key })
+            // If scene-scoped endpoint returns empty / null, try user-facing assets endpoint so the Scene page shows assets too
+            if ((!res || (Array.isArray(res) && res.length === 0)) && typeof listUserContentScriptAssets === 'function') {
+                try {
+                    res = await listUserContentScriptAssets({ script_key })
+                } catch (e) {
+                    // ignore and keep original res
+                }
+            }
             console.log('[ContentScriptsPage] listContentScriptAssets response =', res)
             let assets: any[] = []
             if (!res) assets = []

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { listWorlds } from '../api/worlds'
 import type { World } from '../types/world'
+import { debug as logDebug } from '../lib/log'
 
 interface Props {
     value?: string
@@ -8,7 +9,7 @@ interface Props {
 }
 
 export default function WorldSelector({ value, onChange }: Props): JSX.Element {
-    console.log('[WorldSelector] render')
+    logDebug('[WorldSelector] render')
     const [worlds, setWorlds] = useState<World[]>([])
     const selectRef = useRef<HTMLSelectElement | null>(null)
 
@@ -25,7 +26,7 @@ export default function WorldSelector({ value, onChange }: Props): JSX.Element {
 
     // Log when mounted / when worlds update (helps confirm fetch and render)
     useEffect(() => {
-        console.log('[WorldSelector] mounted, worlds =', worlds)
+        logDebug('[WorldSelector] mounted, worlds =', worlds)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [worlds])
 
@@ -36,7 +37,7 @@ export default function WorldSelector({ value, onChange }: Props): JSX.Element {
 
         const handler = () => {
             try {
-                console.log('[WorldSelector:DOM]', sel.value)
+                logDebug('[WorldSelector:DOM]', sel.value)
                 onChange(sel.value || undefined)
             } catch (err) {
                 console.error('[WorldSelector:DOM] handler error', err)
@@ -63,7 +64,7 @@ export default function WorldSelector({ value, onChange }: Props): JSX.Element {
                     ref={selectRef}
                     value={value ?? ''}
                     onChange={e => {
-                        console.log('[WorldSelector] onChange fired, raw value =', e.target.value)
+                        logDebug('[WorldSelector] onChange fired, raw value =', e.target.value)
                         onChange(e.target.value || undefined)
                     }}
                 >

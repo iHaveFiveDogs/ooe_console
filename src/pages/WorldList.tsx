@@ -11,6 +11,9 @@ import { listRolePairs, createRolePair, updateRolePair, deleteRolePair } from '.
 import { listWorldArchetypeRules, createWorldArchetypeRule, updateWorldArchetypeRule, deleteWorldArchetypeRule } from '../api/worldArchetypeRules'
 import { listWorldRolePairRules, createWorldRolePairRule, updateWorldRolePairRule, deleteWorldRolePairRule } from '../api/worldRolePairRules'
 import WorldRolePairRuleForm from './WorldRolePairRuleForm'
+import ActionsList from './ActionsList'
+import TopicActionsList from './TopicActionsList'
+import { listTopicTemplates } from '../api/topic_templates'
 
 export default function WorldList(): JSX.Element {
     const [items, setItems] = useState<World[]>([])
@@ -32,6 +35,9 @@ export default function WorldList(): JSX.Element {
     const [rulesLoading, setRulesLoading] = useState(false)
     const [rolePairRules, setRolePairRules] = useState<any[]>([])
     const [rolePairRulesLoading, setRolePairRulesLoading] = useState(false)
+    const [topics, setTopics] = useState<any[]>([])
+    const [topicsLoading, setTopicsLoading] = useState<boolean>(false)
+    const [selectedTopicKey, setSelectedTopicKey] = useState<string | undefined>()
 
     // CRUD modal state for archetypes
     const [archetypeCreateOpen, setArchetypeCreateOpen] = useState(false)
@@ -59,6 +65,19 @@ export default function WorldList(): JSX.Element {
         try {
             const res = await listWorlds()
             setItems(res)
+            // default to 'home1', then 'home', otherwise first world key when available and none selected yet
+            try {
+                if (!selectedWorldKey) {
+                    const keys = (res || []).map((w: any) => w && w.key).filter(Boolean)
+                    if (keys.includes('home1')) {
+                        setSelectedWorldKey('home1')
+                    } else if (keys.includes('home')) {
+                        setSelectedWorldKey('home')
+                    } else if (keys.length > 0) {
+                        setSelectedWorldKey(keys[0])
+                    }
+                }
+            } catch (e) { /* noop */ }
         } catch (err: any) {
             console.error('[WorldList] load failed', err)
             setError(err?.message || String(err))
@@ -88,6 +107,8 @@ export default function WorldList(): JSX.Element {
         loadRolePairs()
         loadRules()
         loadRolePairRules()
+        // load topics when worlds are initially loaded if a world is pre-selected
+        if (selectedWorldKey) void loadTopicsForWorld(selectedWorldKey)
     }, [])
 
     async function loadArchetypes() {
@@ -149,6 +170,31 @@ export default function WorldList(): JSX.Element {
             console.error('[WorldList] loadRolePairRules failed', e)
         } finally { setRolePairRulesLoading(false) }
     }
+
+    async function loadTopicsForWorld(worldKey?: string) {
+        setTopicsLoading(true)
+        try {
+            if (!worldKey) { setTopics([]); setSelectedTopicKey(undefined); return }
+            const res = await listTopicTemplates(worldKey)
+            const list = res || []
+            setTopics(list)
+            // auto-select first topic.key when available so TopicActionsList will load immediately
+            if (list.length > 0) {
+                const firstKey = list[0].key ?? list[0].id
+                // only override if none selected
+                if (!selectedTopicKey) setSelectedTopicKey(firstKey)
+            } else {
+                setSelectedTopicKey(undefined)
+            }
+        } catch (e) {
+            console.warn('[WorldList] loadTopicsForWorld failed', e)
+            setTopics([])
+            setSelectedTopicKey(undefined)
+        } finally { setTopicsLoading(false) }
+    }
+
+    // reload topics when selected world changes
+    useEffect(() => { void loadTopicsForWorld(selectedWorldKey); setSelectedTopicKey(undefined) }, [selectedWorldKey])
 
     function handleSaved(savedKey?: string) {
         setEditing(undefined)
@@ -282,6 +328,27 @@ export default function WorldList(): JSX.Element {
 
             {/* Additional domain tables */}
             <div style={{ marginTop: 24 }}>
+                {/* Topic Actions and Actions for the selected world (Topic Templates are managed on Scene Expansion page) */}
+                <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <Select placeholder="Select topic" style={{ width: 360 }} value={selectedTopicKey} onChange={(v) => setSelectedTopicKey(v)} loading={topicsLoading}>
+                        {topics.map(t => (
+                            // prefer string topic.key (used by topic_actions route) and fall back to id
+                            <Select.Option key={t.key ?? t.id} value={t.key ?? t.id}>{t.title ?? (t.key ?? String(t.id))}</Select.Option>
+                        ))}
+                    </Select>
+                    <Button onClick={() => void loadTopicsForWorld(selectedWorldKey)}>Refresh Topics</Button>
+                </div>
+
+                <div style={{ marginTop: 12 }}>
+                    <h4>Topic Actions</h4>
+                    <TopicActionsList topicKey={selectedTopicKey} />
+                </div>
+
+                <div style={{ marginTop: 12 }}>
+                    <h4>Actions</h4>
+                    <ActionsList worldKey={selectedWorldKey} />
+                </div>
+
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h3>Conflict Archetypes</h3>
                     <Button type="primary" onClick={() => setArchetypeCreateOpen(true)}>Create Archetype</Button>
@@ -330,24 +397,24 @@ export default function WorldList(): JSX.Element {
                     </div>
                     <Spin spinning={rolePairRulesLoading}>
                         <StyledTable dataSource={rolePairRules} rowKey={(r: any) => String(r.id)} pagination={{ pageSize: 5 }} columns={[
-                             { title: 'ID', dataIndex: 'id', key: 'id' },
-                             { title: 'World', dataIndex: 'world_key', key: 'world_key' },
-                             { title: 'Role Pair ID', dataIndex: 'role_pair_id', key: 'role_pair_id' },
-                             { title: 'Weight', dataIndex: 'weight', key: 'weight' },
-                             { title: 'Allowed', dataIndex: 'allowed', key: 'allowed', render: (v: any) => (v ? 'yes' : 'no') },
-                             { title: 'Notes', dataIndex: 'notes', key: 'notes' },
-                             {
-                                 title: '', key: 'actions', render: (_: any, r: any) => (
-                                     <div>
-                                         <Button size="small" onClick={() => setRuleEdit(r)}>Edit</Button>
-                                         <Popconfirm title="Delete rule?" onConfirm={async () => { try { setRuleOpLoading(true); await deleteWorldRolePairRule(r.id); await loadRolePairRules(); notification.success({ message: '已删除 rule' }) } catch (e) { console.error(e); notification.error({ message: '删除失败' }) } finally { setRuleOpLoading(false) } }}>
-                                             <Button danger size="small" style={{ marginLeft: 8 }}>Delete</Button>
-                                         </Popconfirm>
-                                     </div>
-                                 )
-                             }
+                            { title: 'ID', dataIndex: 'id', key: 'id' },
+                            { title: 'World', dataIndex: 'world_key', key: 'world_key' },
+                            { title: 'Role Pair ID', dataIndex: 'role_pair_id', key: 'role_pair_id' },
+                            { title: 'Weight', dataIndex: 'weight', key: 'weight' },
+                            { title: 'Allowed', dataIndex: 'allowed', key: 'allowed', render: (v: any) => (v ? 'yes' : 'no') },
+                            { title: 'Notes', dataIndex: 'notes', key: 'notes' },
+                            {
+                                title: '', key: 'actions', render: (_: any, r: any) => (
+                                    <div>
+                                        <Button size="small" onClick={() => setRuleEdit(r)}>Edit</Button>
+                                        <Popconfirm title="Delete rule?" onConfirm={async () => { try { setRuleOpLoading(true); await deleteWorldRolePairRule(r.id); await loadRolePairRules(); notification.success({ message: '已删除 rule' }) } catch (e) { console.error(e); notification.error({ message: '删除失败' }) } finally { setRuleOpLoading(false) } }}>
+                                            <Button danger size="small" style={{ marginLeft: 8 }}>Delete</Button>
+                                        </Popconfirm>
+                                    </div>
+                                )
+                            }
                         ]} />
-                     </Spin>
+                    </Spin>
                 </div>
             </div>
 
@@ -447,14 +514,43 @@ function ArchetypeForm({ archetype, onSaved }: { archetype?: any, onSaved?: () =
 
 function SkeletonForm({ skeleton, onSaved }: { skeleton?: any, onSaved?: () => void }) {
     const [values, setValues] = useState<any>({ archetype_key: skeleton?.archetype_key ?? '', tone: skeleton?.tone ?? '', stages: skeleton?.stages ?? [] })
+    // keep an editable text buffer for stages to avoid parsing on every keystroke/paste
+    const [stagesText, setStagesText] = useState<string>(() => {
+        try {
+            return JSON.stringify(skeleton?.stages ?? [], null, 2)
+        } catch (_) {
+            return '[]'
+        }
+    })
+
+    useEffect(() => {
+        // update when opening a different skeleton for edit
+        setValues({ archetype_key: skeleton?.archetype_key ?? '', tone: skeleton?.tone ?? '', stages: skeleton?.stages ?? [] })
+        try {
+            setStagesText(JSON.stringify(skeleton?.stages ?? [], null, 2))
+        } catch (_) {
+            setStagesText('[]')
+        }
+    }, [skeleton])
 
     async function submit() {
         try {
+            // parse stagesText only on submit; show user-friendly error if invalid JSON
+            let parsedStages: any = []
+            try {
+                parsedStages = stagesText && stagesText.trim() ? JSON.parse(stagesText) : []
+            } catch (parseErr: any) {
+                notification.error({ message: 'Invalid JSON', description: 'Stages must be valid JSON. Please fix the input before saving.' })
+                return
+            }
+
+            const payload = { ...values, stages: parsedStages }
+
             if (skeleton) {
-                await updateConflictEscalationSkeleton(skeleton.id, { ...skeleton, ...values })
+                await updateConflictEscalationSkeleton(skeleton.id, { ...skeleton, ...payload })
                 notification.success({ message: 'Skeleton updated' })
             } else {
-                await createConflictEscalationSkeleton(values)
+                await createConflictEscalationSkeleton(payload)
                 notification.success({ message: 'Skeleton created' })
             }
             onSaved?.()
@@ -477,7 +573,7 @@ function SkeletonForm({ skeleton, onSaved }: { skeleton?: any, onSaved?: () => v
                 </div>
                 <div>
                     <div style={{ fontWeight: 700 }}>Stages (JSON)</div>
-                    <Input.TextArea rows={6} value={JSON.stringify(values.stages || [])} onChange={(e) => { try { setValues((p: any) => ({ ...p, stages: JSON.parse(e.target.value) })) } catch (_) { /* ignore until save */ } }} />
+                    <Input.TextArea rows={6} value={stagesText} onChange={(e) => { setStagesText(e.target.value) }} />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                     <Button onClick={() => onSaved && onSaved()}>Cancel</Button>

@@ -5,6 +5,7 @@ import { listLinksByScene, createLinkByKey, updatePriorityByKey, setActiveByKey,
 import { listScenes } from '../api/scenes'
 import { listConflicts } from '../api/conflicts'
 import { createSessionForScript } from '../api/engine'
+import { debug as logDebug } from '../lib/log'
 
 export default function SceneConflictLinksPage({ initialSceneKey, initialConflictKey }: { initialSceneKey?: string, initialConflictKey?: string } = {}): JSX.Element {
     const [loading, setLoading] = useState(false)
@@ -119,7 +120,7 @@ export default function SceneConflictLinksPage({ initialSceneKey, initialConflic
             // store initialSession in history state so ConversationPage can pick it up if user navigates there
             try { window.history.replaceState({ script_id: String(script_mongo_id), initialSession: res }, '') } catch (e) { }
             notification.success({ message: 'Session started', description: 'Session created successfully.' })
-            console.log('[SceneConflictLinksPage] started session', { script_mongo_id, res })
+            logDebug('[SceneConflictLinksPage] started session', { script_mongo_id, res })
         } catch (err: any) {
             console.error('[SceneConflictLinksPage] start failed', err)
             const msg = err && ((err.body && (err.body.error || err.body.message)) || err.message) || String(err)

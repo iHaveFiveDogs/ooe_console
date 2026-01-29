@@ -1,4 +1,5 @@
 import { post, get } from './http'
+import { debug as logDebug } from '../lib/log'
 
 // Legacy scene-key based helpers are intentionally disabled.
 // Start must use the dedicated engine start endpoint and only send { script_mongo_id }.
@@ -26,7 +27,7 @@ export async function createSessionForScript(script_id: string) {
     const payload: any = { script_mongo_id: String(script_id) }
     const startPath = '/engine/start' // use relative path so Vite dev proxy forwards to backend and avoids CORS
 
-    console.log('[engine.createSessionForScript] POST', startPath, payload)
+    logDebug('[engine.createSessionForScript] POST', startPath, payload)
     try {
         // Do not attempt any fallback; propagate backend errors to caller for UI to display.
         return await post(startPath, payload)
@@ -48,10 +49,9 @@ export async function createSessionForScript(script_id: string) {
  * Returns an array of script summaries (shape depends on backend, e.g. { script_mongo_id, intro_text, learner_role, learning_goal }).
  */
 export async function listScripts(script_mongo_id?: string) {
+    // Use the existing user-facing scripts endpoint to keep list pages functional.
     const path = '/services/user/scripts'
-    if (script_mongo_id) {
-        return get(path, { script_mongo_id })
-    }
+    if (script_mongo_id) return get(path, { script_mongo_id })
     return get(path)
 }
 

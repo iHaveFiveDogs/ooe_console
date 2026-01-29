@@ -2,11 +2,12 @@ import { get, post, put, del } from './http'
 
 // List topic templates. If worldKey is provided, call the world-scoped endpoint
 export async function listTopicTemplates(worldKey?: string) {
-    if (worldKey) {
-        return await get(`/services/worlds/${encodeURIComponent(worldKey)}/topic_templates`)
+    if (!worldKey) {
+        // Prevent accidental collection-level calls which some backends disallow (405).
+        console.warn('[api/topic_templates] listTopicTemplates called without worldKey — refusing to call collection-level /services/topic_templates')
+        throw new Error('worldKey required for listTopicTemplates to avoid collection-level /services/topic_templates request')
     }
-    // Fallback: attempt collection-level endpoint (may return 405 if backend doesn't expose it)
-    return await get('/services/topic_templates')
+    return await get(`/services/worlds/${encodeURIComponent(worldKey)}/topic_templates`)
 }
 
 export async function createTopicTemplate(payload: any) {

@@ -14,31 +14,8 @@ export interface ScriptCreateRequest {
 }
 
 export async function listContentScripts(params?: Record<string, any>) {
-    try {
-        const res = await get('/services/content/scripts', params)
-        console.log('[api.contentScripts] GET /services/content/scripts ->', res)
-        // If backend returns an empty list but we expect data, attempt fallback path
-        if (Array.isArray(res) && res.length === 0) {
-            // try alternate mount
-            try {
-                const alt = await get('/content/scripts', params)
-                console.log('[api.contentScripts] fallback GET /content/scripts ->', alt)
-                return alt
-            } catch (e) {
-                // ignore fallback errors
-            }
-        }
-        return res
-    } catch (err) {
-        console.warn('[api.contentScripts] primary GET failed, attempting fallback /content/scripts', err)
-        try {
-            const alt = await get('/content/scripts', params)
-            console.log('[api.contentScripts] fallback GET /content/scripts ->', alt)
-            return alt
-        } catch (e) {
-            throw err
-        }
-    }
+    // Scene-scoped canonical endpoint for content scripts
+    return get('/services/content/scripts', params)
 }
 
 export async function getContentScript(id: string) {
@@ -58,66 +35,35 @@ export async function deleteContentScript(id: string) {
 }
 
 export async function listContentScriptSummaries(params?: Record<string, any>) {
-    try {
-        const res = await get('/services/content/scripts/summaries', params)
-        console.log('[api.contentScripts] GET /service/content/scripts/summaries ->', res)
-        // If backend returns an empty list try alternate mounts
-        if (Array.isArray(res) && res.length === 0) {
-            try {
-                const alt = await get('/services/content/scripts/summaries', params)
-                console.log('[api.contentScripts] fallback GET /services/content/scripts/summaries ->', alt)
-                return alt
-            } catch (e) {
-                // ignore
-            }
-        }
-        return res
-    } catch (err) {
-        console.warn('[api.contentScripts] primary summaries GET failed, attempting fallbacks', err)
-        try {
-            const alt = await get('/services/content/scripts/summaries', params)
-            console.log('[api.contentScripts] fallback GET /services/content/scripts/summaries ->', alt)
-            return alt
-        } catch (e) {
-            try {
-                const alt2 = await get('/content/scripts/summaries', params)
-                console.log('[api.contentScripts] fallback GET /content/scripts/summaries ->', alt2)
-                return alt2
-            } catch (e2) {
-                throw err
-            }
-        }
-    }
+    // User-facing summaries list (for List / Entry pages). Do not return full assets here.
+    return get('/services/content/scripts/summaries', params)
 }
 
 export async function listContentScriptAssets(params?: Record<string, any>) {
-    try {
-        const res = await get('/services/content/scripts/assets', params)
-        console.log('[api.contentScripts] GET /service/content/scripts/assets ->', res)
-        if (Array.isArray(res) && res.length === 0) {
-            try {
-                const alt = await get('/services/content/scripts/assets', params)
-                console.log('[api.contentScripts] fallback GET /services/content/scripts/assets ->', alt)
-                return alt
-            } catch (e) {
-                // ignore
-            }
-        }
-        return res
-    } catch (err) {
-        console.warn('[api.contentScripts] primary assets GET failed, attempting fallbacks', err)
+    return get('/services/content/scripts/assets', params)
+}
+
+// User-facing single-asset getter for Detail / Chat / Training pages.
+export async function getUserContentScript(id: string) {
+    // Try fetching by script_key first (common for assets), then fall back to script_mongo_id.
+    const endpoints = [{ q: { script_key: id } }, { q: { script_mongo_id: id } }]
+    for (const e of endpoints) {
         try {
-            const alt = await get('/services/content/scripts/assets', params)
-            console.log('[api.contentScripts] fallback GET /services/content/scripts/assets ->', alt)
-            return alt
-        } catch (e) {
-            try {
-                const alt2 = await get('/content/scripts/assets', params)
-                console.log('[api.contentScripts] fallback GET /content/scripts/assets ->', alt2)
-                return alt2
-            } catch (e2) {
-                throw err
-            }
+            const res = await get('/services/content/scripts/assets', e.q)
+            if (!res) continue
+            if (Array.isArray(res)) return res[0] || null
+            if ((res as any).items && Array.isArray((res as any).items)) return (res as any).items[0] || null
+            if ((res as any).data && Array.isArray((res as any).data)) return (res as any).data[0] || null
+            // if backend returned a single object that's the asset
+            return res
+        } catch (err) {
+            // continue to next attempt
         }
     }
+    return null
+}
+
+// User-facing assets list (if needed elsewhere)
+export async function listUserContentScriptAssets(params?: Record<string, any>) {
+    return get('/services/content/scripts/assets', params)
 }

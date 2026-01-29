@@ -1,4 +1,6 @@
 //src/api/http.ts
+import { debug as logDebug } from '../lib/log'
+
 type Primitive = string | number | boolean | null | undefined
 
 export interface RequestOptions {
@@ -59,9 +61,9 @@ export async function request<T = any>(
     // Debug logging: show outgoing request method, URL and body for troubleshooting.
     try {
         // Avoid logging large bodies in production; this is temporary debugging.
-        console.log('[http] request:', method, finalUrl, init.body ? JSON.parse(String(init.body)) : undefined)
+        logDebug('[http] request:', method, finalUrl, init.body ? JSON.parse(String(init.body)) : undefined)
     } catch (e) {
-        try { console.log('[http] request:', method, finalUrl, init.body) } catch { /* noop */ }
+        try { logDebug('[http] request:', method, finalUrl, init.body) } catch { /* noop */ }
     }
 
     const res = await fetch(finalUrl, init)

@@ -57,9 +57,9 @@ function StepRow({ step, onSave, onReset }: { step: any, onSave: (s: any) => voi
     }
 
     // Utterances editing helpers
-    function updateUtterance(idx: number, text: string) {
+    function updateUtterance(idx: number, value: any) {
         const arr = (draft.reference_utterances || []).slice()
-        arr[idx] = text
+        arr[idx] = value
         updateDraft('reference_utterances', arr)
     }
     function addUtterance() {
@@ -131,17 +131,17 @@ function StepRow({ step, onSave, onReset }: { step: any, onSave: (s: any) => voi
                     <div>
                         {Array.isArray(step.reference_utterances) && step.reference_utterances.length > 0 ? (
                             <ul style={{ marginTop: 6 }}>
-                                {step.reference_utterances.map((u: string, i: number) => (
-                                    <li key={i}><Typography.Text style={{ whiteSpace: 'pre-wrap' }}>{u}</Typography.Text></li>
+                                {step.reference_utterances.map((u: any, i: number) => (
+                                    <li key={i}><Typography.Text style={{ whiteSpace: 'pre-wrap' }}>{typeof u === 'string' ? u : (u.utterance || JSON.stringify(u))}</Typography.Text></li>
                                 ))}
                             </ul>
                         ) : <div style={{ color: '#9ca3af' }}>-</div>}
                     </div>
                 ) : (
                     <div style={{ display: 'grid', gap: 8 }}>
-                        {(draft.reference_utterances || []).map((u: string, i: number) => (
+                        {(draft.reference_utterances || []).map((u: any, i: number) => (
                             <div key={i} style={{ display: 'flex', gap: 8 }}>
-                                <Input.TextArea rows={2} value={u} onChange={e => updateUtterance(i, e.target.value)} />
+                                <Input.TextArea rows={2} value={typeof u === 'string' ? u : (u.utterance || '')} onChange={e => updateUtterance(i, typeof u === 'string' ? e.target.value : { ...u, utterance: e.target.value })} />
                                 <Button onClick={() => removeUtterance(i)} danger>Delete</Button>
                             </div>
                         ))}
